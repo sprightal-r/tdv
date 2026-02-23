@@ -1,5 +1,11 @@
 # TDV
 
+## Setup
+
+```bash
+npm install
+```
+
 ## Development server
 
 To start a local development server, run:
@@ -23,4 +29,5 @@ ng build
 ```bash
 ng test
 ```
+
 
