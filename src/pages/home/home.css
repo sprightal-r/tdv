@@ -1,0 +1,63 @@
+table, mat-paginator {
+    background-color: unset;
+}
+
+th {
+    font-weight: bold;
+}
+
+.healthy {
+    color: rgb(43, 241, 43);
+}
+
+.interruption {
+    color: yellow;
+}
+
+.critical {
+    color: red;
+}
+
+#data-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#data-form-toggle {
+    font-size: 16px;
+    font-weight: bold;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+#data-form-toggle:hover,
+th.sortable:hover {
+    background-color: rgb(80, 88, 108);
+}
+
+.delete-cell:hover {
+    color: red;
+}
+
+#data-form-toggle,
+th.sortable,
+.delete-cell {
+    cursor: pointer;
+}
+
+#data-form,
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+#data-form-field-row {
+    display: flex;
+    gap: 5px;
+}
+
+.form-error-message {
+    color: red;
+}

@@ -1,0 +1,27 @@
+/* Global */
+* {
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+html, body {
+    color: white;
+    background-color: rgb(43, 43, 59);
+}
+
+body {
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+/* Loading */
+.loading {
+    background-color: #cdcdcd;
+    animation: blinker 1s linear infinite;
+}
+
+@keyframes blinker {
+    50% {
+        opacity: 0;
+        background-color: rgba(200, 200, 200, 0.5);
+    }
+}

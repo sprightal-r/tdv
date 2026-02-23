@@ -1,0 +1,140 @@
+<div id="home">
+    <h1>Telemetry Data Viewer</h1>
+
+    <div id="data-header">
+        <div id="filter-bar">
+            <mat-form-field>
+                <mat-label>Filter by satellite</mat-label>
+                <mat-select [value]="filterConfig.satelliteId" [class.loading]="satellites === undefined" (selectionChange)="onFilterBySatelliteId($event)">
+                    <mat-option>--</mat-option>
+                    @if (satellites !== undefined) {
+                        @for (satellite of satellites; track $index) {
+                            <mat-option [value]="satellite.id">{{ satellite.name }}</mat-option>
+                        }
+                    }
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Filter by status</mat-label>
+                <mat-select [value]="filterConfig.status" (selectionChange)="onFilterByStatus($event)">
+                    <mat-option>--</mat-option>
+                    @for (status of statuses; track $index) {
+                        <mat-option [value]="status">{{ status | titlecase }}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+        </div>
+
+        <div id="data-form-toggle" (click)="showTelemetryForm = !showTelemetryForm">+ Add Telemetry</div>
+    </div>
+
+    @if (showTelemetryForm) {
+        <div id="data-form">
+            <form [formGroup]="telemetryForm" (submit)="onCreateTelemetryPoint()">
+                <div id="data-form-field-row">
+                    <mat-form-field>
+                        <mat-label for="satelliteId-input">Satellite</mat-label>
+                        <mat-select id="satelliteId-input" formControlName="satelliteId"
+                            [class.loading]="satellites === undefined"
+                            (openedChange)="showTelemetryFormMessages = showTelemetryFormMessages || !$event"
+                        >
+                            @if (satellites !== undefined) {
+                                @for (satellite of satellites; track $index) {
+                                    <mat-option [value]="satellite.id">{{ satellite.name }}</mat-option>
+                                }
+                            }
+                        </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field>
+                        <mat-label for="timestamp-input">Timestamp (GMT)</mat-label>
+                        <input matInput id="timestamp-input" formControlName="timestamp" type="datetime-local" step="1"
+                            (blur)="showTelemetryFormMessages = true" />
+                    </mat-form-field>
+
+                    <mat-form-field>
+                        <mat-label for="altitude-input">Altitude (m)</mat-label>
+                        <input matInput id="altitude-input" formControlName="altitude" type="number"
+                            (blur)="showTelemetryFormMessages = true" />
+                    </mat-form-field>
+
+                    <mat-form-field>
+                        <mat-label for="velocity-input">Velocity (m/s)</mat-label>
+                        <input matInput id="velocity-input" formControlName="velocity" type="number"
+                            (blur)="showTelemetryFormMessages = true" />
+                    </mat-form-field>
+
+                    <mat-form-field>
+                        <mat-label for="status-input">Health Status</mat-label>
+                        <mat-select id="status-input" formControlName="status"
+                            (openedChange)="showTelemetryFormMessages = showTelemetryFormMessages || !$event"
+                        >
+                            @for (status of statuses; track $index) {
+                                <mat-option [value]="status">{{ status | titlecase}}</mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+                
+                <button mat-raised-button color="primary" type="submit" [disabled]="!telemetryForm.valid || editLock">
+                    Submit
+                </button>
+            </form>
+            @if (showTelemetryFormMessages) {
+                @for (errorMessage of telemetryFormMH.messages; track $index) {
+                    <div class="form-error-message">{{ errorMessage }}</div>
+                }
+            }
+        </div>
+    }
+
+    <div id="data-table">
+        <table mat-table [dataSource]="tableVH.vm.items">
+            <ng-container matColumnDef="satelliteId">
+                <th mat-header-cell *matHeaderCellDef> Satellite ID </th>
+                <td mat-cell *matCellDef="let point" [class.loading]="point === undefined"> {{ point?.satelliteId }} </td>
+            </ng-container>
+            <ng-container matColumnDef="timestamp">
+                <th mat-header-cell *matHeaderCellDef class="sortable"
+                    (click)="onSort({ column: 'timestamp', direction: 'descending' })"
+                > {{ sortConfig.column === 'timestamp' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : '' }} Timestamp </th>
+                <td mat-cell *matCellDef="let point" [class.loading]="point === undefined"> {{ point?.timestamp | date: 'M/d/yy, h:mm:ss a zzzz' }} </td>
+            </ng-container>
+            <ng-container matColumnDef="altitude">
+                <th mat-header-cell *matHeaderCellDef class="sortable"
+                    (click)="onSort({ column: 'altitude', direction: 'ascending' })"
+                > {{ sortConfig.column === 'altitude' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : '' }} Altitude (m) </th>
+                <td mat-cell *matCellDef="let point" [class.loading]="point === undefined"> {{ point?.altitude }} </td>
+            </ng-container>
+            <ng-container matColumnDef="velocity">
+                <th mat-header-cell *matHeaderCellDef class="sortable"
+                (click)="onSort({ column: 'velocity', direction: 'ascending' })"
+            > {{ sortConfig.column === 'velocity' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : '' }} Velocity (m/s) </th>
+                <td mat-cell *matCellDef="let point" [class.loading]="point === undefined"> {{ point?.velocity }} </td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef> Health Status </th>
+                <td mat-cell *matCellDef="let point" [class]="point?.status ?? 'none'" [class.loading]="point === undefined"> {{ point?.status | titlecase }} </td>
+            </ng-container>
+            <ng-container matColumnDef="delete">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let point" class="delete-cell" title="Delete telemetry point" [class.loading]="point === undefined" (click)="onDeleteTelemetryPoint(point?.id)">
+                    @if (point !== undefined) {
+                        ✖
+                    }
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
+            <tr mat-row *matRowDef="let pt; columns: columnsToDisplay"></tr>
+        </table>
+
+        <mat-paginator
+            [pageIndex]="pageConfig.page"
+            [pageSize]="pageConfig.pageSize"
+            [length]="tableVH.vm.length"
+            [pageSizeOptions]="[10, 50, 100]"
+            (page)="onPage($event)"
+        ></mat-paginator>
+    </div>
+</div>
